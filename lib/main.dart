@@ -1,25 +1,39 @@
-import 'package:dars76_bloc_1qism/cubit/counter_cubit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'ui/screens/counter_screen.dart';
+import 'core/app.dart';
+import 'services/services.dart';
+import 'logic/cubits.dart';
+import 'data/repositories/repositories.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(const App());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class App extends StatelessWidget {
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) {
-        return CounterCubit();
-      },
-      child: const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: CounterScreen(),
+    return MultiRepositoryProvider(
+      providers: [
+        RepositoryProvider(create: (ctx) {
+          return WeatherRepository(WeatherHttpService());
+        }),
+        RepositoryProvider(create: (ctx) {
+          return TodoRepository(TodoHttpService());
+        }),
+      ],
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (ctx) {
+            return WeatherCubit(ctx.read<WeatherRepository>());
+          }),
+          BlocProvider(create: (ctx) {
+            return TodoCubit(ctx.read<TodoRepository>());
+          })
+        ],
+        child: const MainApp(),
       ),
     );
   }
